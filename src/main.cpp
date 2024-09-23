@@ -1,3 +1,6 @@
+// Description: Main program for temperature control system
+
+// ===== Includes =====
 #include <Arduino.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -5,35 +8,37 @@
 #include <Adafruit_GFX.h>
 #include <Bounce2.h>
 
-// Pin definitions
+// ===== Pin Definitions =====
 const int DALLAS_PIN = 4;
 const int BUTTON_UP_PIN = 6;
 const int BUTTON_ONOFF_PIN = 7;
 const int BUTTON_DOWN_PIN = 8;
 const int RELAY_PIN = 5;  // Assuming we use D1 (GPIO5) for the relay
 
-// OLED display settings
+// ===== OLED Display Settings =====
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-// Temperature sensor setup
+// ===== Temperature Sensor Setup =====
 OneWire oneWire(DALLAS_PIN);
 DallasTemperature sensors(&oneWire);
 
-// Button debounce objects
+// ===== Button Debounce Objects =====
 Bounce buttonUp = Bounce();
 Bounce buttonOnOff = Bounce();
 Bounce buttonDown = Bounce();
 
-// Global variables
+// ===== Global Variables =====
 float setTemperature = 22.0;
 float currentTemperature = 0.0;
 bool heaterOn = false;
 bool softOn = true;
 
+// ===== Setup Function =====
 void setup() {
+  // Initialize serial communication
   Serial.begin(115200);
   
   // Initialize pins
@@ -66,6 +71,7 @@ void setup() {
   Serial.println("Setup complete");
 }
 
+// ===== Main Loop Function =====
 void loop() {
   // Update button states
   buttonUp.update();
