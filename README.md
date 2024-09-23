@@ -18,6 +18,7 @@ Projektet bruger følgende biblioteker:
 - DallasTemperature: Til at læse temperaturen fra DS18B20-sensoren
 - U8g2: Til at styre OLED-displayet
 - Bounce2: Til at håndtere knappernes debouncing
+- PubSubClient: Til MQTT-kommunikation
 
 ## Funktionalitet
 
@@ -34,6 +35,8 @@ Projektet bruger følgende biblioteker:
 5. **Statusvisning**: Displayet viser systemets aktuelle status (ON, Standby, eller OFF).
 
 6. **Hukommelse**: Systemet gemmer den indstillede temperatur og on/off-status i EEPROM, så indstillingerne bevares selv efter en strømafbrydelse.
+
+7. **MQTT-kommunikation**: Systemet publicerer regelmæssigt den aktuelle temperatur, den indstillede temperatur og systemets on/off-status via MQTT.
 
 ## Pinout
 
@@ -57,14 +60,16 @@ For at spare energi og forlænge levetiden af OLED-displayet, opdateres displaye
 ## Opsætning og brug
 
 1. Tilslut hardwarekomponenterne som beskrevet i pinout-sektionen.
-2. Upload koden til ESP8266 ved hjælp af PlatformIO eller Arduino IDE.
-3. Når systemet starter op, vil det vise "Initializing..." på displayet.
-4. Brug "Op" og "Ned" knapperne til at justere måltemperaturen.
-5. Brug "Tænd/Sluk" knappen til at aktivere eller deaktivere temperaturkontrollen.
+2. Opdater WiFi- og MQTT-indstillingerne i koden med dine egne oplysninger.
+3. Upload koden til ESP8266 ved hjælp af PlatformIO eller Arduino IDE.
+4. Når systemet starter op, vil det vise "Initializing..." på displayet og forsøge at oprette forbindelse til WiFi og MQTT-brokeren.
+5. Brug "Op" og "Ned" knapperne til at justere måltemperaturen.
+6. Brug "Tænd/Sluk" knappen til at aktivere eller deaktivere temperaturkontrollen.
+7. Overvåg systemets status og temperaturdata via din MQTT-klient eller -dashboard.
 
 ## Fremtidige forbedringer
 
-- Implementere WiFi-forbindelse for fjernbetjening og -overvågning.
+- Implementere en webserver for fjernbetjening og -overvågning via en webgrænseflade.
 - Tilføje en PID-controller for mere præcis temperaturkontrol.
 - Implementere datalogning og grafer for temperaturhistorik.
 
