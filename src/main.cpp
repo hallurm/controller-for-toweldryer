@@ -17,11 +17,11 @@
 #define EEPROM_SIZE 2
 
 // ===== Pin Definitions =====
-const int DALLAS_PIN = 4;
-const int BUTTON_UP_PIN = 6;
-const int BUTTON_ONOFF_PIN = 7;
-const int BUTTON_DOWN_PIN = 8;
-const int RELAY_PIN = 5;  // Assuming we use D1 (GPIO5) for the relay
+#define DALLAS_PIN 4
+#define BUTTON_UP_PIN 6
+#define BUTTON_ONOFF_PIN 7
+#define BUTTON_DOWN_PIN 8
+#define RELAY_PIN 5  // Assuming we use D1 (GPIO5) for the relay
 
 // ===== OLED Display Settings =====
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C display(U8G2_R0, U8X8_PIN_NONE);
