@@ -4,8 +4,8 @@
 #include <Arduino.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <Adafruit_SSD1306.h>
-#include <Adafruit_GFX.h>
+#include <U8g2lib.h>
+#include <Wire.h>
 #include <Bounce2.h>
 
 // ===== Pin Definitions =====
@@ -16,10 +16,7 @@ const int BUTTON_DOWN_PIN = 8;
 const int RELAY_PIN = 5;  // Assuming we use D1 (GPIO5) for the relay
 
 // ===== OLED Display Settings =====
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define OLED_RESET -1
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C display(U8G2_R0, U8X8_PIN_NONE);
 
 // ===== Temperature Sensor Setup =====
 OneWire oneWire(DALLAS_PIN);
@@ -35,6 +32,7 @@ float setTemperature = 22.0;
 float currentTemperature = 0.0;
 bool heaterOn = false;
 bool softOn = true;
+bool displayNeedsUpdate = true;
 
 // ===== Setup Function =====
 void setup() {
@@ -57,16 +55,12 @@ void setup() {
   sensors.begin();
   
   // Initialize OLED display
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("SSD1306 allocation failed"));
-    for(;;);
-  }
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0,0);
-  display.println("Initializing...");
-  display.display();
+  display.begin();
+  display.setFont(u8g2_font_6x10_tf);
+  display.setDrawColor(1);
+  display.clearBuffer();
+  display.drawStr(0, 10, "Initializing...");
+  display.sendBuffer();
   
   Serial.println("Setup complete");
 }
@@ -81,44 +75,52 @@ void loop() {
   // Handle button presses
   if (buttonUp.fell()) {
     setTemperature += 0.5;
+    displayNeedsUpdate = true;
   }
   if (buttonDown.fell()) {
     setTemperature -= 0.5;
+    displayNeedsUpdate = true;
   }
   if (buttonOnOff.fell()) {
     softOn = !softOn;
+    displayNeedsUpdate = true;
   }
   
   // Read temperature
   sensors.requestTemperatures();
-  currentTemperature = sensors.getTempCByIndex(0);
-  
-  // Control logic
-  if (softOn) {
-    if (currentTemperature < setTemperature - 2) {
-      heaterOn = true;
-    } else if (currentTemperature > setTemperature + 1) {
-      heaterOn = false;
-    }
-  } else {
-    heaterOn = false;
+  float newTemperature = sensors.getTempCByIndex(0);
+  if (abs(newTemperature - currentTemperature) >= 0.1) {
+    currentTemperature = newTemperature;
+    displayNeedsUpdate = true;
   }
   
-  // Control relay
-  digitalWrite(RELAY_PIN, heaterOn ? HIGH : LOW);
+  // Control logic
+  bool newHeaterState = false;
+  if (softOn) {
+    if (currentTemperature < setTemperature - 2) {
+      newHeaterState = true;
+    } else if (currentTemperature > setTemperature + 1) {
+      newHeaterState = false;
+    } else {
+      newHeaterState = heaterOn;  // Keep previous state
+    }
+  }
   
-  // Update display
-  display.clearDisplay();
-  display.setCursor(0,0);
-  display.print("Set: ");
-  display.print(setTemperature, 1);
-  display.println(" C");
-  display.print("Current: ");
-  display.print(currentTemperature, 1);
-  display.println(" C");
-  display.print("Status: ");
-  display.println(softOn ? (heaterOn ? "ON" : "Standby") : "OFF");
-  display.display();
+  if (newHeaterState != heaterOn) {
+    heaterOn = newHeaterState;
+    digitalWrite(RELAY_PIN, heaterOn ? HIGH : LOW);
+    displayNeedsUpdate = true;
+  }
+  
+  // Update display if needed
+  if (displayNeedsUpdate) {
+    display.clearBuffer();
+    display.drawStr(0, 10, ("Set: " + String(setTemperature, 1) + " C").c_str());
+    display.drawStr(0, 25, ("Current: " + String(currentTemperature, 1) + " C").c_str());
+    display.drawStr(0, 40, ("Status: " + String(softOn ? (heaterOn ? "ON" : "Standby") : "OFF")).c_str());
+    display.sendBuffer();
+    displayNeedsUpdate = false;
+  }
   
   delay(100);  // Small delay to prevent excessive looping
 }
