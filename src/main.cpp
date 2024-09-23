@@ -8,6 +8,8 @@
 #include <Wire.h>
 #include <Bounce2.h>
 #include <EEPROM.h>
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
 
 // EEPROM addresses
 #define EEPROM_SET_TEMP 0
@@ -40,6 +42,20 @@ bool heaterOn = false;
 bool softOn = true;
 bool displayNeedsUpdate = true;
 
+// ===== WiFi and MQTT Settings =====
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+const char* mqtt_server = "YOUR_MQTT_BROKER_IP";
+const int mqtt_port = 1883;
+const char* mqtt_user = "YOUR_MQTT_USERNAME";
+const char* mqtt_password = "YOUR_MQTT_PASSWORD";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+unsigned long lastMsg = 0;
+#define MSG_BUFFER_SIZE (50)
+char msg[MSG_BUFFER_SIZE];
+
 // ===== EEPROM Functions =====
 void saveSettings() {
   EEPROM.write(EEPROM_SET_TEMP, setTemperature);
@@ -54,6 +70,67 @@ void loadSettings() {
   // Validate loaded values
   if (setTemperature < 0 || setTemperature > 40) {
     setTemperature = 22;  // Default value if invalid
+  }
+}
+
+// ===== MQTT Functions =====
+void setup_wifi() {
+  delay(10);
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX);
+    if (client.connect(clientId.c_str(), mqtt_user, mqtt_password)) {
+      Serial.println("connected");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
+void publishMQTTData() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
+  unsigned long now = millis();
+  if (now - lastMsg > 5000) {
+    lastMsg = now;
+    
+    // Publish on/off status
+    snprintf(msg, MSG_BUFFER_SIZE, "%s", softOn ? "ON" : "OFF");
+    client.publish("tempcontrol/status", msg);
+    
+    // Publish set temperature
+    snprintf(msg, MSG_BUFFER_SIZE, "%d", setTemperature);
+    client.publish("tempcontrol/settemp", msg);
+    
+    // Publish current temperature
+    snprintf(msg, MSG_BUFFER_SIZE, "%d", currentTemperature);
+    client.publish("tempcontrol/currenttemp", msg);
   }
 }
 
@@ -88,6 +165,12 @@ void setup() {
   display.clearBuffer();
   display.drawStr(0, 10, "Initializing...");
   display.sendBuffer();
+  
+  // Setup WiFi
+  setup_wifi();
+  
+  // Setup MQTT
+  client.setServer(mqtt_server, mqtt_port);
   
   Serial.println("Setup complete");
 }
@@ -152,6 +235,9 @@ void loop() {
     display.sendBuffer();
     displayNeedsUpdate = false;
   }
+  
+  // Publish MQTT data
+  publishMQTTData();
   
   delay(100);  // Small delay to prevent excessive looping
 }
