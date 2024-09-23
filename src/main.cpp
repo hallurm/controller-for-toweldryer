@@ -12,6 +12,7 @@
 // EEPROM addresses
 #define EEPROM_SET_TEMP 0
 #define EEPROM_SOFT_ON 1
+#define EEPROM_SIZE 2
 
 // ===== Pin Definitions =====
 const int DALLAS_PIN = 4;
@@ -42,13 +43,13 @@ bool displayNeedsUpdate = true;
 // ===== EEPROM Functions =====
 void saveSettings() {
   EEPROM.write(EEPROM_SET_TEMP, setTemperature);
-  EEPROM.write(EEPROM_SOFT_ON, softOn);
+  EEPROM.write(EEPROM_SOFT_ON, softOn ? 1 : 0);
   EEPROM.commit();
 }
 
 void loadSettings() {
   setTemperature = EEPROM.read(EEPROM_SET_TEMP);
-  softOn = EEPROM.read(EEPROM_SOFT_ON);
+  softOn = EEPROM.read(EEPROM_SOFT_ON) == 1;
   
   // Validate loaded values
   if (setTemperature < 0 || setTemperature > 40) {
@@ -62,7 +63,7 @@ void setup() {
   Serial.begin(115200);
   
   // Initialize EEPROM
-  EEPROM.begin(512);
+  EEPROM.begin(EEPROM_SIZE);
   loadSettings();
   
   // Initialize pins
