@@ -63,3 +63,33 @@ At udvikle en styreenhed til en 230V håndklædetørrer ved hjælp af en ESP8266
 - WiFi-integration for fjernbetjening
 - Tidsbaseret styring
 - Energiforbrugsovervågning
+
+## PlatformIO Libraries
+For at implementere dette projekt skal følgende biblioteker bruges (nyeste versioner):
+
+1. OneWire
+2. DallasTemperature
+3. Adafruit SSD1306
+4. Adafruit GFX Library
+5. Bounce2
+
+For at tilføje disse biblioteker til dit PlatformIO-projekt:
+
+1. Åbn dit projekt i PlatformIO IDE.
+2. Gå til PlatformIO Home.
+3. Klik på "Libraries" i venstre sidepanel.
+4. Søg efter hvert bibliotek ved navn.
+5. Klik på "Add to Project" for hvert bibliotek og vælg dit projekt.
+
+Alternativt kan du tilføje følgende linjer til din `platformio.ini` fil:
+
+```ini
+lib_deps =
+    paulstoffregen/OneWire
+    milesburton/DallasTemperature
+    adafruit/Adafruit SSD1306
+    adafruit/Adafruit GFX Library
+    thomasfredericks/Bounce2
+```
+
+Dette vil automatisk downloade og installere de nyeste versioner af bibliotekerne, når du bygger dit projekt.
