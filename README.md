@@ -33,6 +33,8 @@ Projektet bruger følgende biblioteker:
 
 5. **Statusvisning**: Displayet viser systemets aktuelle status (ON, Standby, eller OFF).
 
+6. **Hukommelse**: Systemet gemmer den indstillede temperatur og on/off-status i EEPROM, så indstillingerne bevares selv efter en strømafbrydelse.
+
 ## Pinout
 
 - DALLAS_PIN: 4 (DS18B20 temperatursensor)

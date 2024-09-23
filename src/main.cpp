@@ -7,6 +7,11 @@
 #include <U8g2lib.h>
 #include <Wire.h>
 #include <Bounce2.h>
+#include <EEPROM.h>
+
+// EEPROM addresses
+#define EEPROM_SET_TEMP 0
+#define EEPROM_SOFT_ON 1
 
 // ===== Pin Definitions =====
 const int DALLAS_PIN = 4;
@@ -34,10 +39,31 @@ bool heaterOn = false;
 bool softOn = true;
 bool displayNeedsUpdate = true;
 
+// ===== EEPROM Functions =====
+void saveSettings() {
+  EEPROM.write(EEPROM_SET_TEMP, setTemperature);
+  EEPROM.write(EEPROM_SOFT_ON, softOn);
+  EEPROM.commit();
+}
+
+void loadSettings() {
+  setTemperature = EEPROM.read(EEPROM_SET_TEMP);
+  softOn = EEPROM.read(EEPROM_SOFT_ON);
+  
+  // Validate loaded values
+  if (setTemperature < 0 || setTemperature > 40) {
+    setTemperature = 22;  // Default value if invalid
+  }
+}
+
 // ===== Setup Function =====
 void setup() {
   // Initialize serial communication
   Serial.begin(115200);
+  
+  // Initialize EEPROM
+  EEPROM.begin(512);
+  loadSettings();
   
   // Initialize pins
   pinMode(RELAY_PIN, OUTPUT);
@@ -76,14 +102,17 @@ void loop() {
   if (buttonUp.fell()) {
     setTemperature += 1;
     displayNeedsUpdate = true;
+    saveSettings();
   }
   if (buttonDown.fell()) {
     setTemperature -= 1;
     displayNeedsUpdate = true;
+    saveSettings();
   }
   if (buttonOnOff.fell()) {
     softOn = !softOn;
     displayNeedsUpdate = true;
+    saveSettings();
   }
   
   // Read temperature
