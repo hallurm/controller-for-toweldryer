@@ -28,8 +28,8 @@ Bounce buttonOnOff = Bounce();
 Bounce buttonDown = Bounce();
 
 // ===== Global Variables =====
-float setTemperature = 22.0;
-float currentTemperature = 0.0;
+int setTemperature = 22;
+int currentTemperature = 0;
 bool heaterOn = false;
 bool softOn = true;
 bool displayNeedsUpdate = true;
@@ -74,11 +74,11 @@ void loop() {
   
   // Handle button presses
   if (buttonUp.fell()) {
-    setTemperature += 0.5;
+    setTemperature += 1;
     displayNeedsUpdate = true;
   }
   if (buttonDown.fell()) {
-    setTemperature -= 0.5;
+    setTemperature -= 1;
     displayNeedsUpdate = true;
   }
   if (buttonOnOff.fell()) {
@@ -88,8 +88,8 @@ void loop() {
   
   // Read temperature
   sensors.requestTemperatures();
-  float newTemperature = sensors.getTempCByIndex(0);
-  if (abs(newTemperature - currentTemperature) >= 0.1) {
+  int newTemperature = round(sensors.getTempCByIndex(0));
+  if (newTemperature != currentTemperature) {
     currentTemperature = newTemperature;
     displayNeedsUpdate = true;
   }
@@ -115,8 +115,8 @@ void loop() {
   // Update display if needed
   if (displayNeedsUpdate) {
     display.clearBuffer();
-    display.drawStr(0, 10, ("Set: " + String(setTemperature, 1) + " C").c_str());
-    display.drawStr(0, 25, ("Current: " + String(currentTemperature, 1) + " C").c_str());
+    display.drawStr(0, 10, ("Set: " + String(setTemperature) + " C").c_str());
+    display.drawStr(0, 25, ("Current: " + String(currentTemperature) + " C").c_str());
     display.drawStr(0, 40, ("Status: " + String(softOn ? (heaterOn ? "ON" : "Standby") : "OFF")).c_str());
     display.sendBuffer();
     displayNeedsUpdate = false;
