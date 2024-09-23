@@ -140,6 +140,7 @@ void loop() {
     heaterOn = newHeaterState;
     digitalWrite(RELAY_PIN, heaterOn ? HIGH : LOW);
     displayNeedsUpdate = true;
+    saveSettings();
   }
   
   // Update display if needed
